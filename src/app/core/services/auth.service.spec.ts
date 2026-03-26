@@ -15,16 +15,13 @@ const mockRouter = {
   navigate: vi.fn(),
 };
 
-vi.mock('@angular/fire/auth', async (importOriginal) => {
-  const actual: any = await importOriginal();
-  return {
-    ...actual,
-    authState: vi.fn(() => of(null)),
-    signInWithPopup: vi.fn(),
-    signOut: vi.fn(),
-    GoogleAuthProvider: vi.fn(),
-  };
-});
+vi.mock('@angular/fire/auth', () => ({
+  authState: vi.fn(() => of(null)),
+  signInWithPopup: vi.fn(),
+  signOut: vi.fn(),
+  GoogleAuthProvider: class {},
+  Auth: class {},
+}));
 
 describe('AuthService - Zoneless Business Logic (Gherkin Style)', () => {
   let service: AuthService;
@@ -42,7 +39,7 @@ describe('AuthService - Zoneless Business Logic (Gherkin Style)', () => {
   });
 
   describe('Feature: User Authentication with Google', () => {
-    
+
     it('Scenario: Successful Google Login', async () => {
       // Given: The user is not authenticated
       vi.mocked(signInWithPopup).mockResolvedValue({ user: { uid: '123' } } as any);
@@ -73,7 +70,16 @@ describe('AuthService - Zoneless Business Logic (Gherkin Style)', () => {
 
       // When: The user attempts to login
       // Then: The service should propagate the error
-      await expect(service.loginWithGoogle()).rejects.toThrow('Auth failed');
+      await expect(service.loginWithGoogle()).rejects.toThrow('Login failed');
+    });
+
+    it('Scenario: User Sign Out Failure', async () => {
+      // Given: An error occurs during sign out
+      vi.mocked(signOut).mockRejectedValue(new Error('Sign out failed'));
+
+      // When: The user attempts to sign out
+      // Then: The service should throw Logout failed
+      await expect(service.logout()).rejects.toThrow('Logout failed');
     });
 
   });

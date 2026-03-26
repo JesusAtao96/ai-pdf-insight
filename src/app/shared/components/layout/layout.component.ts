@@ -80,7 +80,7 @@ export class LayoutComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   readonly user = this.authService.user;
-  
+
   readonly isDarkMode = signal<boolean>(
     localStorage.getItem('theme') === 'dark'
   );
