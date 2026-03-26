@@ -4,8 +4,8 @@ import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fir
 import { VertexAI, getGenerativeModel } from '@angular/fire/vertexai';
 import { AuthService } from './auth.service';
 import { AppDocument } from '../models/document.interface';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map, Observable, EMPTY, from, of } from 'rxjs';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { map, Observable, EMPTY, from, of, switchMap, filter } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -28,17 +28,21 @@ export class DocumentService {
   );
 
   public getHistory(): Observable<AppDocument[]> {
-    const user = this.authService.user();
-    if (!user) return EMPTY;
+    return toObservable(this.authService.user).pipe(
+      filter(user => user !== undefined), // Wait for authentication to initialize
+      switchMap(user => {
+        if (!user) return of([]); // Not logged in: empty history
 
-    const docsRef = collection(this.firestore, 'documents');
-    const q = query(
-      docsRef,
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+        const docsRef = collection(this.firestore, 'documents');
+        const q = query(
+          docsRef,
+          where('userId', '==', user.uid),
+          orderBy('createdAt', 'desc')
+        );
+
+        return collectionData(q, { idField: 'id' }) as Observable<AppDocument[]>;
+      })
     );
-
-    return collectionData(q, { idField: 'id' }) as Observable<AppDocument[]>;
   }
 
   async getDocument(id: string): Promise<AppDocument | null> {

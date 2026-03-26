@@ -71,15 +71,25 @@ describe('DocumentService', () => {
   });
 
   describe('US-001: History Data', () => {
-    it('should return history when user is authenticated', () => {
-      service.getHistory();
+    it('should return history when user is authenticated', async () => {
+      await TestBed.runInInjectionContext(async () => {
+        service.getHistory().subscribe();
+        // Small delay to allow signal -> observable propagation
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
       expect(collection).toHaveBeenCalled();
     });
 
-    it('should return EMPTY when user is NOT authenticated', () => {
+    it('should return empty list when user is NOT authenticated', async () => {
       authServiceMock.user.set(null);
-      const history = service.getHistory();
-      expect(history).toBe(EMPTY);
+      await TestBed.runInInjectionContext(async () => {
+        return new Promise<void>((resolve) => {
+          service.getHistory().subscribe(history => {
+            expect(history).toEqual([]);
+            resolve();
+          });
+        });
+      });
     });
   });
 

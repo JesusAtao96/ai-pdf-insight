@@ -44,6 +44,7 @@ __screenshots__/
 Thumbs.db
 
 /.agents/*
-/docs/*
+/docs/design.md
+/docs/spec.md
 /src/environments/*
 /design_stitch
