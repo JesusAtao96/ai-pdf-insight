@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "deploy": "npm run build && npx firebase-tools deploy --only hosting --project ai-pdf-insights",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
